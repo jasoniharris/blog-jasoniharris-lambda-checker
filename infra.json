@@ -1,0 +1,87 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "AWS Amplify Console infrastructure",
+  "Resources": {
+    "IAMLambdaServiceRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": "blogLambdaServiceRole",
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs",
+          "arn:aws:iam::aws:policy/AmazonSNSFullAccess"
+        ],
+        "Policies": [
+          {
+            "PolicyName": "LambdaServiceRolePolicy",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Action": [
+                    "s3:Get*",
+                    "s3:List*"
+                  ],
+                  "Resource": "*",
+                  "Effect": "Allow"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "S3Bucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketName": "blog-jasoniharris-checker"
+      }
+    },
+    "SNSTopic": {
+      "Type": "AWS::SNS::Topic",
+      "Properties": {
+        "Subscription": [
+          {
+            "Endpoint": "jasoniharris@hotmail.com",
+            "Protocol": "email"
+          }
+        ]
+      }
+    }
+  },
+  "Outputs": {
+    "SNSTopic": {
+      "Value": {
+        "Ref": "SNSTopic"
+      },
+      "Description": "The SNS topic for checker email notifications."
+    },
+    "IAMLambdaServiceRole": {
+      "Value": {
+        "Fn::GetAtt": [
+          "IAMLambdaServiceRole",
+          "Arn"
+        ]
+      },
+      "Description": "The role used by Lambda."
+    },
+    "S3Bucket": {
+      "Value": {
+        "Ref": "S3Bucket"
+      },
+      "Description": "The S3 bucket to hold the Lambda checker function."
+    }
+  }
+}

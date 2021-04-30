@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Parameters:
+  ROLE:
+    Type: String
+  SNSTOPIC:
+    Type: String
+Resources:
+  function:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: blogJasoniharrisChecker
+      Description: Check the jasoniharris blog website is alive
+      Handler: app.handler
+      CodeUri: s3://blog-jasoniharris-checker/d52797e7eb02f513cd499df3396bd59e
+      Runtime: python3.8
+      MemorySize: 128
+      Timeout: 30
+      Role:
+        Ref: ROLE
+      Environment:
+        Variables:
+          SNSTOPIC:
+            Ref: SNSTOPIC
+  ScheduledRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: ScheduledRule
+      ScheduleExpression: rate(6 hours)
+      State: ENABLED
+      Targets:
+      - Arn:
+          Fn::GetAtt:
+          - function
+          - Arn
+        Id: TargetFunctionV1
+  PermissionForEventsToInvokeLambda:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName:
+        Ref: function
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn:
+        Fn::GetAtt:
+        - ScheduledRule
+        - Arn
